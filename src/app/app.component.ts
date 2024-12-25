@@ -1,4 +1,4 @@
-import { Component, inject, model, signal, Signal } from '@angular/core';
+import { Component, inject, model, OnInit, signal, Signal } from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -21,7 +21,7 @@ interface ITodo {
   styleUrl: './app.component.scss',
   imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatCardModule, MatCheckboxModule, FormsModule, CommonModule, MatDialogModule]
 })
-export class AppComponent {
+export class AppComponent implements OnInit{
   todoList = signal<ITodo[]>([]);
 
   description = model('');
@@ -30,6 +30,10 @@ export class AppComponent {
 
   selectedIndex: number = -1;
 
+  ngOnInit(): void {
+    const storageValue = localStorage.getItem('list');
+    this.todoList.set(storageValue ? JSON.parse(storageValue) : []);
+  }
   save(): void {
     const obj: ITodo = {
       description: this.description(),
@@ -38,11 +42,13 @@ export class AppComponent {
     };
     this.todoList().push(obj);
     this.description.set('');
+    localStorage.setItem('list', JSON.stringify(this.todoList()));
   }
 
   checkmarkChanged(index: number): void {
     this.todoList()[index].done = !this.todoList()[index].done;
     this.todoList.set(this.todoList());
+    localStorage.setItem('list', JSON.stringify(this.todoList()));
   }
 
   deleteConfirmation(index: number): void {
@@ -51,6 +57,7 @@ export class AppComponent {
     }).afterClosed().subscribe((res: any) => {
       if (res === 'YES') {
         this.todoList().splice(index, 1);
+        localStorage.setItem('list', JSON.stringify(this.todoList()));
       }
     });
   }
@@ -65,6 +72,7 @@ export class AppComponent {
       this.todoList()[this.selectedIndex].description = this.description();
       this.description.set('');
       this.selectedIndex = -1;
+      localStorage.setItem('list', JSON.stringify(this.todoList()));
     }
   }
 }
